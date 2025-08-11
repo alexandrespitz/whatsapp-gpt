@@ -6,9 +6,9 @@ import { MapDrawer } from "./map/MapDrawer";
 import { useMapDrawerStore } from "./map/mapDrawerStore";
 import Link from "next/link";
 
-export function Shell({ children }: { children: React.ReactNode }) {
-  const [mobileNavActive, setMobileNavActive] = useState(false);
-  const { open } = useMapDrawerStore();
+export default function Shell({ children }: { children: React.ReactNode }) {
+  // ...component code...
+} = useMapDrawerStore();
 
   const navigationMarkup = (
     <Navigation location="/">

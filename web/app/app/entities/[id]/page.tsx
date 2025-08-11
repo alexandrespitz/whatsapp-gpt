@@ -1,9 +1,9 @@
-import { fetchEntityById } from '@/lib/entities';
+import { getEntity } from '@/lib/data/entities';
 import { Card, TextContainer, Heading, Button } from '@shopify/polaris';
 import Link from 'next/link';
 
 export default async function EntityDetailPage({ params }: { params: { id: string } }) {
-  const entity = await fetchEntityById(params.id);
+  const entity = await getEntity(params.id);
 
   if (!entity) {
     return <div>Entity not found.</div>;

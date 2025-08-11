@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Form, FormLayout, TextField, Select, Button, InlineError } from '@shopify/polaris';
-import { createEntity, fetchEntityTypes } from '@/lib/entities';
+import { createEntity, fetchEntityTypes } from '@/lib/data/entities';
 
 export default function NewEntityPage() {
   const [name, setName] = useState('');

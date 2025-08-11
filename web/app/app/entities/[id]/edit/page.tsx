@@ -3,30 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Card, Form, FormLayout, TextField, Select, Button, InlineError } from '@shopify/polaris';
-import { fetchEntityById, fetchEntityTypes, updateEntity } from '@/lib/entities';
+import { getEntity, fetchEntityTypes, updateEntity } from '@/lib/data/entities';
 
-export default function EditEntityPage() {
-  const router = useRouter();
-  const params = useParams();
-  const id = typeof params.id === 'string' ? params.id : (params.id?.[0] || '');
-  const [name, setName] = useState('');
-  const [typeId, setTypeId] = useState('');
-  const [status, setStatus] = useState('');
-  const [fields, setFields] = useState('');
-  const [entityTypes, setEntityTypes] = useState<any[]>([]);
-  const [error, setError] = useState('');
+// ...code...
 
-  useEffect(() => {
-    fetchEntityTypes().then(setEntityTypes);
-    fetchEntityById(id).then(entity => {
-      if (entity) {
-        setName(entity.name || '');
-        setTypeId(entity.type_id || '');
-        setStatus(entity.status || '');
-        setFields(entity.fields ? JSON.stringify(entity.fields, null, 2) : '');
-      }
-    });
-  }, [id]);
+useEffect(() => {
+  getEntity(id).then(setEntity);
+}, [id]);
 
   const handleSubmit = async () => {
     setError('');

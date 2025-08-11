@@ -1,9 +1,8 @@
 import { supabase } from "../supabase/client";
 
-export async function listLocationsByBbox(orgId: string, bbox: [number, number, number, number]) {
+export async function listLocationsByBbox(bbox: [number, number, number, number]) {
   // Calls RPC to filter by bbox
   const { data, error } = await supabase.rpc("locations_within_bbox", {
-    p_org: orgId,
     p_minlon: bbox[0],
     p_minlat: bbox[1],
     p_maxlon: bbox[2],

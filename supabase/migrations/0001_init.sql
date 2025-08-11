@@ -128,13 +128,13 @@ returns setof uuid
 language sql
 security definer
 set search_path = public
-as $$
+as $
   select org_id from memberships where user_id = auth.uid()
-$$;
+$;
 grant execute on function public.current_user_org_ids() to authenticated;
 
--- RLS policies
-do $$
+-- RLS policies for org-scoped tables
+do $
 declare
   tbl text;
 begin
@@ -152,13 +152,39 @@ begin
       drop policy if exists "%1$s_rls" on %1$s;
       create policy "%1$s_rls" on %1$s
         for all
-        using (org_id = any (array(select current_user_org_ids())));
+        using (org_id = any (array(select current_user_org_ids())))
+        with check (org_id = any (array(select current_user_org_ids())));
     ', tbl);
     execute format('
       alter table %1$s force row level security;
     ', tbl);
   end loop;
-end $$;
+end $;
+
+-- organizations visibility: row policy for memberships, insert policy for service role, block update/delete
+drop policy if exists "orgs_members_view" on organizations;
+create policy "orgs_members_view" on organizations
+  for select
+  using (exists (
+    select 1 from memberships
+    where memberships.org_id = organizations.id
+      and memberships.user_id = auth.uid()
+  ));
+
+drop policy if exists "orgs_insert_service_role" on organizations;
+create policy "orgs_insert_service_role" on organizations
+  for insert
+  with check (auth.role() = 'service_role');
+
+drop policy if exists "orgs_no_update" on organizations;
+create policy "orgs_no_update" on organizations
+  for update
+  using (false);
+
+drop policy if exists "orgs_no_delete" on organizations;
+create policy "orgs_no_delete" on organizations
+  for delete
+  using (false);
 
 -- Insert/Update org_id validation for child tables (entity_locations, entity_links, etc.)
 -- (Additional RLS policies for INSERT/UPDATE available as needed.)
@@ -203,28 +229,32 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
 
--- Geo upsert function
+-- Geo upsert function (now infers org_id from entity, drops p_org)
 create or replace function public.upsert_entity_location(
-  p_org uuid,
   p_entity uuid,
   p_geojson jsonb,
   p_properties jsonb default '{}'::jsonb,
   p_location_id uuid default null
 ) returns uuid
 language plpgsql
-as $$
+as $
 declare
   v_geom geometry;
   v_geom_type text;
   v_id uuid;
+  v_org_id uuid;
 begin
+  select org_id into v_org_id from entities where id = p_entity;
+  if v_org_id is null then
+    raise exception 'Entity not found or missing org_id';
+  end if;
   v_geom := ST_SetSRID(ST_GeomFromGeoJSON(p_geojson::text), 4326);
   v_geom_type := GeometryType(v_geom);
 
   if p_location_id is not null then
     update entity_locations
       set geom = v_geom, geom_type = v_geom_type, properties = p_properties
-      where id = p_location_id and org_id = p_org and entity_id = p_entity
+      where id = p_location_id and org_id = v_org_id and entity_id = p_entity
       returning id into v_id;
     if v_id is not null then
       return v_id;
@@ -232,26 +262,25 @@ begin
   end if;
 
   insert into entity_locations(org_id, entity_id, geom, geom_type, properties)
-    values (p_org, p_entity, v_geom, v_geom_type, p_properties)
+    values (v_org_id, p_entity, v_geom, v_geom_type, p_properties)
     returning id into v_id;
   return v_id;
 end;
-$$;
+$;
 
--- Geo bounding box query
+-- Geo bounding box query (removes p_org, filters by org_id in current_user_org_ids())
 create or replace function public.locations_within_bbox(
-  p_org uuid,
   p_minlon float8,
   p_minlat float8,
   p_maxlon float8,
   p_maxlat float8
 ) returns setof entity_locations
 language sql
-as $$
+as $
   select * from entity_locations
-  where org_id = p_org
+  where org_id = any(array(select current_user_org_ids()))
     and ST_Intersects(
       geom,
       ST_MakeEnvelope(p_minlon, p_minlat, p_maxlon, p_maxlat, 4326)
     )
-$$;
+$;

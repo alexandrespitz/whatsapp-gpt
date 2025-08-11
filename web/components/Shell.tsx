@@ -16,13 +16,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         items={[
           {
             label: "Dashboard",
-            url: "/app",
-            icon: "HomeMajor"
+            url: "/app"
           },
           {
             label: "Entities",
-            url: "/app",
-            icon: "CustomersMajor"
+            url: "/app/entities"
           }
         ]}
       />

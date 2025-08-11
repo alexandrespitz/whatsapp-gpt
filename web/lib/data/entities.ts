@@ -3,7 +3,8 @@ import { supabase } from "../supabase/client";
 export async function listEntities() {
   const { data, error } = await supabase
     .from("entities")
-    .select("id,name,status,type_id,type:entity_types(name)")
+    .select("id,name,status,type_id,type:entity_types(name),updated_at")
+    .order("updated_at", { ascending: false })
     .limit(100);
   if (error) return [];
   return (data ?? []).map((e: any) => ({
@@ -11,8 +12,27 @@ export async function listEntities() {
     name: e.name,
     status: e.status,
     type_id: e.type_id,
-    type_name: e.type?.name || ""
+    type_name: e.type?.name || "",
+    updated_at: e.updated_at
   }));
+}
+
+export async function fetchEntityTypes() {
+  const { data, error } = await supabase.from("entity_types").select("*").order("name");
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function fetchPipelines() {
+  const { data, error } = await supabase.from("pipelines").select("*").order("name");
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function fetchPipelineStages() {
+  const { data, error } = await supabase.from("pipeline_stages").select("*").order("position");
+  if (error) return [];
+  return data ?? [];
 }
 
 export async function getEntity(id: string) {

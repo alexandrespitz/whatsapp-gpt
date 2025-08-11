@@ -24,8 +24,12 @@
    - Provision a new Supabase project (https://app.supabase.com/)
    - Enable PostGIS extension in SQL editor.
    - Run `supabase/migrations/0001_init.sql` in the Supabase SQL editor to create schema, RLS, and functions.
+     - SQL migrations should be run in Supabase SQL Editor, PostGIS enabled.
+     - The RPC signatures for upsert_entity_location and locations_within_bbox now omit org.
    - (Optional) Run `supabase/seed.sql` to add demo/test data.  
    - Get your project's API URL and anon key from Supabase dashboard.
+   - For Vercel deploy: set NEXT_PUBLIC_* envs.
+   - Supabase Auth redirect URLs should include http://localhost:3000 and the Vercel domain.
 
 5. **Start the app**
    ```

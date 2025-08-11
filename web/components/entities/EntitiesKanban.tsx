@@ -5,7 +5,7 @@ import { Card, Text } from "@shopify/polaris";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { arrayMove, SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { listEntities, moveEntityToStage } from "../../lib/data/entities";
-import { useStageColumns } from "../../lib/data/pipelines";
+import { listStageColumns } from "../../lib/data/pipelines";
 
 export function EntitiesKanban() {
   const [columns, setColumns] = useState<any[]>([]);
@@ -13,7 +13,7 @@ export function EntitiesKanban() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([useStageColumns(), listEntities()]).then(([cols, ents]) => {
+    Promise.all([listStageColumns(), listEntities()]).then(([cols, ents]) => {
       setColumns(cols);
       setEntities(ents);
       setLoading(false);

@@ -172,6 +172,10 @@ create policy "orgs_members_view" on organizations
   ));
 
 drop policy if exists "orgs_insert_service_role" on organizations;
+create policy "orgs_insert_authenticated" on organizations
+  for insert
+  with check (auth.role() = 'authenticated');
+-- ... existing policies ...
 create policy "orgs_insert_service_role" on organizations
   for insert
   with check (auth.role() = 'service_role');
